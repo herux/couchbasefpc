@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="11"/>
+    <BuildModes Active="Default"/>
+    <Units Count="9">
+      <Unit0>
+        <Filename Value="minimal.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <CursorPos X="53" Y="18"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="90"/>
+        <CursorPos X="61" Y="117"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="../../fpc-3.0.4a/rtl/inc/dynlibs.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="39"/>
+        <CursorPos X="3" Y="61"/>
+        <UsageCount Value="10"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="21"/>
+        <CursorPos X="53" Y="60"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="../../fpc-3.0.4a/packages/fcl-db/src/sqldb/mysql/mysql40conn.pas"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="10"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="../../fpc-3.0.4a/packages/fcl-db/src/sqldb/mysql/mysqlconn.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="81"/>
+        <UsageCount Value="10"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="../../fpc-3.0.4a/packages/fcl-db/src/sqldb/sqldb.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="162"/>
+        <CursorPos X="3" Y="184"/>
+        <UsageCount Value="10"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="../../fpc-3.0.4a/packages/fcl-db/src/base/db.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1977"/>
+        <CursorPos X="41" Y="1997"/>
+        <UsageCount Value="10"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="../../fpc-3.0.4a/rtl/inc/systemh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="392"/>
+        <CursorPos X="12" Y="414"/>
+        <UsageCount Value="10"/>
+      </Unit8>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="8" Column="35"/>
+      </Position1>
+      <Position2>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="30" Column="20"/>
+      </Position2>
+      <Position3>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="17" Column="19"/>
+      </Position3>
+      <Position4>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="18" Column="36"/>
+      </Position4>
+      <Position5>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="31" Column="32"/>
+      </Position5>
+      <Position6>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="20" Column="23"/>
+      </Position6>
+      <Position7>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="74" Column="55" TopLine="47"/>
+      </Position7>
+      <Position8>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="68" Column="126" TopLine="45"/>
+      </Position8>
+      <Position9>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="34" Column="59"/>
+      </Position9>
+      <Position10>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="21" Column="34"/>
+      </Position10>
+      <Position11>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="74" Column="16" TopLine="54"/>
+      </Position11>
+      <Position12>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="66" Column="16" TopLine="44"/>
+      </Position12>
+      <Position13>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="52" Column="17" TopLine="20"/>
+      </Position13>
+      <Position14>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="44" Column="5" TopLine="22"/>
+      </Position14>
+      <Position15>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="52" Column="27" TopLine="20"/>
+      </Position15>
+      <Position16>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="60" Column="27" TopLine="26"/>
+      </Position16>
+      <Position17>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="113" Column="37" TopLine="88"/>
+      </Position17>
+      <Position18>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="100" Column="52" TopLine="78"/>
+      </Position18>
+      <Position19>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="55" Column="27" TopLine="21"/>
+      </Position19>
+      <Position20>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="70" Column="33" TopLine="51"/>
+      </Position20>
+      <Position21>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="69" Column="133" TopLine="47"/>
+      </Position21>
+      <Position22>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="73" Column="15" TopLine="51"/>
+      </Position22>
+      <Position23>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="55" Column="26" TopLine="21"/>
+      </Position23>
+      <Position24>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="114" Column="13" TopLine="94"/>
+      </Position24>
+      <Position25>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="41" Column="24" TopLine="3"/>
+      </Position25>
+      <Position26>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="17" Column="5" TopLine="3"/>
+      </Position26>
+      <Position27>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="12" Column="18"/>
+      </Position27>
+      <Position28>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="20" Column="31"/>
+      </Position28>
+      <Position29>
+        <Filename Value="../src/couchbase_db.pas"/>
+        <Caret Line="33" Column="45" TopLine="21"/>
+      </Position29>
+      <Position30>
+        <Filename Value="../src/couchbase_api.pas"/>
+        <Caret Line="117" Column="56" TopLine="90"/>
+      </Position30>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="0" ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>
