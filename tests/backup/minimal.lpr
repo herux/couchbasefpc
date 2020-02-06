@@ -10,7 +10,7 @@ var
 begin
   cbCon := TCouchbaseConnection.Create;
   try
-    cbCon.Connect('couchbase://localhost');
+    cbCon.Connect('couchbase://localhost', 'Administrator', 'passwordHere');
   finally
     cbCon.Free;
   end;
