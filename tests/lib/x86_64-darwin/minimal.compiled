@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Compiler Value="/usr/local/bin/fpc" Date="1572629024"/>
+  <Params Value=" -MObjFPC -Scghi -O1 -gw -gl -l -vewnhibq -Fi/Users/herux/Documents/couchbasefpc/tests/lib/x86_64-darwin -Fu/Users/herux/Documents/couchbasefpc/src -Fu/Users/herux/Documents/couchbasefpc/tests/ -FU/Users/herux/Documents/couchbasefpc/tests/lib/x86_64-darwin/ -FE/Users/herux/Documents/couchbasefpc/tests/ -o/Users/herux/Documents/couchbasefpc/tests/minimal minimal.lpr"/>
+</CONFIG>
