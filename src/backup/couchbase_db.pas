@@ -108,7 +108,7 @@ begin
 
         gcmd.cmdbase.key.&type:= LCB_KV_COPY;
         gcmd.cmdbase.key.contig.bytes := PAnsiChar('key');
-        gcmd.cmdbase.key.contig.nbytes := Length('key');
+        scmd.cmdbase.key.contig.nbytes := Length('key');
         if IsSuccess(lcb_get3(FInstance, nil, @gcmd)) then
            lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
 

@@ -261,7 +261,7 @@ begin
   lcb_set_get_callback := Tlcb_set_get_callback_proc(LoadCouchbaseFunc('lcb_set_get_callback'));
   // crud
   lcb_store3 := Tlcb_store3_func(LoadCouchbaseFunc('lcb_store3'));
-  lcb_get3 := Tlcb_get3_func(LoadCouchbaseFunc('lcb_get3'));
+  lcb_get3 :=
   // error function
   lcb_strerror :=  Tlcb_strerror_func(LoadCouchbaseFunc('lcb_strerror'));
 end;
