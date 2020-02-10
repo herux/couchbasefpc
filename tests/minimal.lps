@@ -7,17 +7,17 @@
       <Unit0>
         <Filename Value="minimal.lpr"/>
         <IsPartOfProject Value="True"/>
-        <CursorPos X="31" Y="6"/>
+        <IsVisibleTab Value="True"/>
+        <CursorPos X="62" Y="13"/>
         <UsageCount Value="119"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="../src/couchbase_db.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
         <TopLine Value="83"/>
-        <CursorPos X="51" Y="115"/>
+        <CursorPos X="108" Y="98"/>
         <UsageCount Value="119"/>
         <Loaded Value="True"/>
       </Unit1>
