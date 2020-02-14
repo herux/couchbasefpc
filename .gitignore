@@ -198,6 +198,7 @@ nbproject
 .svn
 .CVS
 .idea
+.vscode
 node_modules
 dist
 
