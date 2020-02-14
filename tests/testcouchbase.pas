@@ -19,7 +19,7 @@ type
     procedure TearDown; override;
   published
     procedure TestConnect;
-    procedure TestSimpleStoreAndGet;
+    procedure TestUpsert;
   end;
 
 implementation
@@ -30,9 +30,9 @@ begin
        Fail('Connection to couchbase failed, error: ' + cbCon.LastErrorDesc);
 end;
 
-procedure TTestCouchbase.TestSimpleStoreAndGet;
+procedure TTestCouchbase.TestUpsert;
 begin
-
+  //cbCon.Upsert('TestUpsert', '{"TestUpsert":"TestUpsert"}');
 end;
 
 procedure TTestCouchbase.SetUp;

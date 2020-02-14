@@ -1,5 +1,76 @@
 {
+    "omnipascal.searchPath": "~/Programs/pascal",
+    "omnipascal.freePascalSourcePath": "~/Programs/freepascal/fpcsrc",
+    "omnipascal.delphiInstallationPath": "~/Programs/freepascal/fpc/bin/x86_64-darwin",
+    "omnipascal.defaultDevelopmentEnvironment": "FreePascal",
+
+    "sde.buildOnSave": false,
+    "sde.languageServerMode": "langserver",
+    "swift.languageServerPath": "~/GitHub/sourcekit-lsp/.build/release/sourcekit-lsp",
+    "sourcekit-lsp.serverPath": "~/GitHub/sourcekit-lsp/.build/release/sourcekit-lsp",
+
+    "[markdown]": {
+        "files.trimTrailingWhitespace": false,
+    },
+
+    "files.trimFinalNewlines": true,
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
     "files.associations": {
-        "couchbase.h": "c"
-    }
+        "*.json": "jsonc"
+    },
+
+    "editor.fontFamily": "'FiraCode-Medium', 'DejaVu Sans Code', Menlo, Monaco, monospace",
+    "editor.rulers": [80, 120],
+    "editor.tabSize": 2,
+    "editor.fontSize": 13,
+    "editor.letterSpacing": 0.1,
+    "editor.wordWrapColumn": 120,
+    "editor.fontLigatures": true,
+    "editor.matchBrackets": false,
+    "editor.smoothScrolling": true,
+    "editor.minimap.enabled": false,
+    "editor.renderLineHighlight": "all",
+    "editor.tokenColorCustomizations": {
+        "comments": {
+            "fontStyle": "italic"
+        }
+    },
+
+    "workbench.iconTheme": "vscode-great-icons",
+    "workbench.enableExperiments": false,
+    "workbench.editor.tabCloseButton": "left",
+    "workbench.statusBar.feedback.visible": false,
+    "workbench.settings.enableNaturalLanguageSearch": false,
+    "workbench.colorCustomizations": {
+        "[Default Dark+]": {
+            "editorRuler.foreground": "#333333",
+            "editor.lineHighlightBackground": "#282828",
+            // "editorGutter.background": "#181818",
+            // "editorIndentGuide.activeBackground": "#a0a0a0",
+            "sideBar.border": "#333333",
+            // "tab.border": "#3f3f3f",
+        },
+    },
+
+    "window.zoomLevel": 0,
+    "window.titleBarStyle": "native",
+    "window.title": "${rootName}${separator}${dirty}${activeFolderShort}/${activeEditorShort} | Code",
+
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+
+    "terminal.integrated.fontSize": 13,
+    "terminal.integrated.cursorStyle": "line",
+    "terminal.integrated.cursorBlinking": true,
+
+    "debug.toolBarLocation": "docked",
+    "lldb.launch.terminal": "integrated",
+
+    "git.enableSmartCommit": true,
+    "search.showLineNumbers": true,
+    "zenMode.hideLineNumbers": false,
+
+    "telemetry.enableTelemetry": false,
+    "telemetry.enableCrashReporter": false,
 }

@@ -32,7 +32,21 @@ const
   LCB_CALLBACK_COUNTER = LCB_CALLBACK_STORE + 1;
   LCB_CALLBACK_TOUCH = LCB_CALLBACK_COUNTER + 1;
   LCB_CALLBACK_REMOVE = LCB_CALLBACK_TOUCH + 1;
-
+  LCB_CALLBACK_UNLOCK = LCB_CALLBACK_REMOVE + 1;
+  LCB_CALLBACK_STATS = LCB_CALLBACK_UNLOCK + 1;
+  LCB_CALLBACK_VERSIONS = LCB_CALLBACK_STATS + 1;
+  LCB_CALLBACK_VERBOSITY = LCB_CALLBACK_VERSIONS + 1;
+  LCB_CALLBACK_FLUSH = LCB_CALLBACK_VERBOSITY + 1;
+  LCB_CALLBACK_OBSERVE = LCB_CALLBACK_FLUSH + 1;
+  LCB_CALLBACK_GETREPLICA = LCB_CALLBACK_OBSERVE + 1;
+  LCB_CALLBACK_ENDURE = LCB_CALLBACK_GETREPLICA + 1;
+  LCB_CALLBACK_HTTP = LCB_CALLBACK_ENDURE + 1;
+  LCB_CALLBACK_CBFLUSH = LCB_CALLBACK_HTTP + 1;
+  LCB_CALLBACK_OBSEQNO = LCB_CALLBACK_CBFLUSH + 1;
+  LCB_CALLBACK_STOREDUR = LCB_CALLBACK_OBSEQNO + 1;
+  LCB_CALLBACK_SDLOOKUP = LCB_CALLBACK_STOREDUR + 1;
+  LCB_CALLBACK_SDMUTATE = LCB_CALLBACK_SDLOOKUP + 1;
+  LCB_CALLBACK__MAX = LCB_CALLBACK_SDMUTATE + 1;
 
 
 type
@@ -44,7 +58,7 @@ type
     user: PAnsiChar;
     passwd: PAnsiChar;
     bucket: PAnsiChar;
-    io: Pointer{plcb_io_opt_st};
+    io: Pointer;
   end;
 
   lcb_create_st1 = record
@@ -183,6 +197,50 @@ type
   end;
   plcb_CMDGET = ^lcb_CMDGET;
 
+  lcb_RESPSTORE = record
+    respbase: lcb_RESPBASE;
+    op: lcb_storage_t;
+  end;
+  plcb_RESPSTORE = ^lcb_RESPSTORE;
+
+  lcb_RESPGET = record
+    respbase: lcb_RESPBASE;
+    value: Pointer;
+    nvalue: lcb_size;
+    bufh: Pointer;
+    datatype: lcb_datatype_t;
+    itmflags: lcb_U32;
+  end;
+  plcb_RESPGET = ^lcb_RESPGET;
+
+  lcb_RESPCOUNTER = record
+    respbase: lcb_RESPBASE;
+    value: lcb_U64;
+  end;
+  plcb_RESPCOUNTER = ^lcb_RESPCOUNTER;
+
+  lcb_RESPSERVERFIELDS = record
+    server: PAnsiChar;
+  end;
+
+  lcb_RESPSERVERBASE = packed record
+    respbase: lcb_RESPBASE;
+    respserverfields: lcb_RESPSERVERFIELDS;
+  end;
+  plcb_RESPSERVERBASE = ^lcb_RESPSERVERBASE;
+
+  lcb_RESPFLUSH = record
+    respserverbase: lcb_RESPSERVERBASE;
+  end;
+  plcb_RESPFLUSH = ^lcb_RESPFLUSH;
+
+  lcb_RESPSTATS = record
+    respserverbase: lcb_RESPSERVERBASE;
+    value: PAnsiChar;
+    nvalue: lcb_SIZE;
+  end;
+  plcb_RESPSTATS = ^lcb_RESPSTATS;
+
   Tlcb_create_func = function(instance: plcb_t; const options: plcb_create_st): Lcb_error_t; cdecl;
   Tlcb_destroy_proc = procedure(instance: lcb_t); cdecl;
   Tlcb_connect_func= function(instance: lcb_t): Lcb_error_t; cdecl;
@@ -213,13 +271,15 @@ var
   lcb_store3: Tlcb_store3_func;
   lcb_get3: Tlcb_get3_func;
 
-
   CouchbaseHandle: TLibHandle = 0;
+
+procedure LCB_CMD_SET_KEY(var cmdbase: lcb_CMDBASE; AKey: String; Keylen: Integer);
+procedure LCB_CMD_SET_VALUE(var scmd: lcb_CMDSTORE; AValue: String; Valuelen: Integer);
 
 implementation
 
 const
-  {$IFDEF darwin}
+  {$IFDEF DARWIN}
   COUCHBASE_LIBRARY = 'libcouchbase.dylib';
   {$ENDIF}
   //{$IFDEF windows}
@@ -232,14 +292,13 @@ const
 
 function LoadCouchbaseFunc(const AProcName: String): Pointer;
 begin
-  WriteLn('CouchbaseHandle: ', CouchbaseHandle, ' AProcName: ', AnsiString(AProcName));
-  {$IFDEF UNIX}
+  // {$IFDEF UNIX}
   Result := GetProcAddress(CouchbaseHandle, AnsiString(AProcName));
-  {$ELSE}
-  Result := {Windows.}GetProcAddress(SSLCryptHandle, PChar(FceName));
-  {$ENDIF}
+  // {$ELSE}
+  // Result := {Windows.}GetProcAddress(CouchbaseHandle, PChar(AProcName));
+  // {$ENDIF}
   if (Result = nil) then
-    raise Exception.CreateFmt('function %s is not found', [AProcName]);
+    raise Exception.CreateFmt('method %s is not found', [AProcName]);
 end;
 
 procedure LoadCouchbase;
@@ -271,6 +330,22 @@ begin
   if (CouchbaseHandle = 0) then Exit;
   FreeLibrary(CouchbaseHandle);
   CouchbaseHandle := 0;
+end;
+
+procedure LCB_CMD_SET_KEY(var cmdbase: lcb_CMDBASE; AKey: String;
+  Keylen: Integer);
+begin
+  cmdbase.key.&type := LCB_KV_COPY;
+  cmdbase.key.contig.bytes := PAnsiChar(AKey);
+  cmdbase.key.contig.nbytes := Keylen;
+end;
+
+procedure LCB_CMD_SET_VALUE(var scmd: lcb_CMDSTORE; AValue: String;
+  Valuelen: Integer);
+begin
+  scmd.value.vtype := LCB_KV_COPY;
+  scmd.value.contig.bytes := PAnsiChar(AValue);
+  scmd.value.contig.nbytes := Valuelen;
 end;
 
 initialization

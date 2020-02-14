@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      { // shortcut: F5 (start debugging)
+        "type": "lldb",
+        "request": "launch",
+        "name": "LLDB Debugger",
+        "cwd": "${workspaceFolder}",
+        "program": ".build/debug/${fileBasenameNoExtension}",
+        "args": [],
+        "terminal": "integrated",
+        "preLaunchTask": "fpc: Build Debug",
+        "postDebugTask": "fpc: Remove Build Files"
+      }
+    ]
+  }
