@@ -19,7 +19,7 @@ type
     procedure TearDown; override;
   published
     procedure TestConnect;
-    procedure TestUpsert;
+    //procedure TestUpsert;
   end;
 
 implementation
@@ -29,23 +29,19 @@ var
   lValue: String;
   cbRes: TCouchbaseResult;
 begin
-  if not cbCon.Connect('couchbase://localhost/testbucket', 'usercb', 'sa_karep_mu') then
+  if not cbCon.Connect then
        Fail('Connection to couchbase failed, error: ' + cbCon.LastErrorDesc);
-
-  cbRes := cbCon.Upsert('test', '{"ok":"eko3"}');
-  WriteLn('success: ', cbRes.Success);
-  //cbCon.Get('afterTestConnect', lValue);
-  //WriteLn(lValue);
 end;
 
-procedure TTestCouchbase.TestUpsert;
-begin
-  cbCon.Upsert('TestUpsert1', '{"TestUpsert":"TestUpsert"}');
-end;
+//procedure TTestCouchbase.TestUpsert;
+//begin
+//  WriteLn('cbCon: ', cbCon <> nil);
+//  cbCon.Upsert('TestUpsert', '{"TestUpsert":"TestUpsert"}');
+//end;
 
 procedure TTestCouchbase.SetUp;
 begin
-  cbCon := TCouchbaseConnection.Create;
+  cbCon := TCouchbaseConnection.Create('couchbase://localhost/testbucket', 'usercb', 'sa_karep_mu');
 end;
 
 procedure TTestCouchbase.TearDown;
