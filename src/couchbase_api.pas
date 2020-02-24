@@ -282,21 +282,21 @@ const
   {$IFDEF DARWIN}
   COUCHBASE_LIBRARY = 'libcouchbase.dylib';
   {$ENDIF}
-  //{$IFDEF windows}
-  //COUCHBASE_LIBRARY = 'libcouchbase.dll';
-  //{$ENDIF}
-  //{$IFDEF linux}
-  //COUCHBASE_LIBRARY = 'libcouchbase.so';
-  //{$ENDIF}
+  {$IFDEF WINDOWS}
+  COUCHBASE_LIBRARY = 'libcouchbase.dll';
+  {$ENDIF}
+  {$IFDEF linux}
+  COUCHBASE_LIBRARY = 'libcouchbase.so';
+  {$ENDIF}
 
 
 function LoadCouchbaseFunc(const AProcName: String): Pointer;
 begin
-  // {$IFDEF UNIX}
+   {$IFDEF UNIX}
   Result := GetProcAddress(CouchbaseHandle, AnsiString(AProcName));
-  // {$ELSE}
-  // Result := {Windows.}GetProcAddress(CouchbaseHandle, PChar(AProcName));
-  // {$ENDIF}
+   {$ELSE}
+   Result := {Windows.}GetProcAddress(CouchbaseHandle, PChar(AProcName));
+   {$ENDIF}
   if (Result = nil) then
     raise Exception.CreateFmt('method %s is not found', [AProcName]);
 end;

@@ -1,6 +1,7 @@
 unit couchbase_db;
 
 {$mode objfpc}{$H+}
+{$modeSwitch advancedRecords}
 
 interface
 
@@ -22,6 +23,8 @@ type
                          ctCBFLUSH = LCB_CALLBACK_CBFLUSH, ctOBSEQNO = LCB_CALLBACK_OBSEQNO, ctSTOREDUR = LCB_CALLBACK_STOREDUR,
                          ctSDLOOKUP = LCB_CALLBACK_SDLOOKUP, ctSDMUTATE = LCB_CALLBACK_SDMUTATE, ct_MAX = LCB_CALLBACK__MAX);
 
+  { TCouchbaseResult }
+
   TCouchbaseResult = record
     Success: Boolean;
     Error: Integer;
@@ -32,6 +35,8 @@ type
     CAS: Integer;
     Operation: Integer;
     Counter: Integer;
+  public
+    procedure Initialize;
   end;
   PCouchbaseResult = ^TCouchbaseResult;
 
@@ -39,23 +44,29 @@ type
 
   TCouchbaseConnection = class(TObject)
   private
+    FConnected: Boolean;
     FLastErrorCode: lcb_error_t;
     FLastErrorDesc: String;
     FInstance: lcb_t;
     FOptions: lcb_create_st;
+    FCallbackProc: Tlcb_RESPCALLBACK_proc;
+    FCallbackBootstrap: Tlcb_bootstrap_callback_proc;
     function IsSuccess(const ACallFuncResult: Lcb_error_t): Boolean;
     function Store(const AOperation: TCouchbaseCRUDOperation; const AKey: String; const AValue: String;
              const AFormat: TCouchbaseResponseFormat): TCouchbaseResult;
   public
-    constructor Create;
+    constructor Create(const AConnection: String; const AUsername: String = ''; const APassword: String = '');
     destructor Destroy; override;
 
-    function Connect(const AConnection: String; const AUsername: String = ''; const APassword: String = ''): Boolean;
+    function Connect: Boolean;
     function Upsert(const AKey: String; const AValue: String): TCouchbaseResult;
     function Get(const AKey: String; out AValue: String): TCouchbaseResult;
+    function Add(const AKey: String; const AValue: String): TCouchbaseResult;
+    function Append(const AKey: String; const AValue: String): TCouchbaseResult;
   published
     property LastErrorCode: Integer read FLastErrorCode;
     property LastErrorDesc: String read FLastErrorDesc;
+    property Connected: Boolean read FConnected;
   end;
 
 procedure CallbackProc(instance: lcb_t; callbackType: Integer;
@@ -73,11 +84,30 @@ begin
   vResp := resp^;
   PCbRes:= vResp.cookie;
   vCbRes:= PCbRes^;
+  WriteLn('CallbackProc           | ');
+  WriteLn('=======================|');
   WriteLn('callbackType: ', GetEnumName(typeInfo(TCouchbaseCallbackType), Ord(callbackType)));
   WriteLn('Version: ', vResp.version);
   WriteLn('Value: ', vCbRes.Value);
   WriteLn('Success: ', vCbRes.Success);
   WriteLn('Format: ', GetEnumName(typeInfo(TCouchbaseResponseFormat), Ord(vCbRes.Format)));
+  WriteLn('-----------------------|');
+  WriteLn('');
+end;
+
+{ TCouchbaseResult }
+
+procedure TCouchbaseResult.Initialize;
+begin
+  Success := False;
+  Error := 0;
+  Key := '';
+  Value := '';
+  Format := rfJSON;
+  Flags := 0;
+  CAS := 0;
+  Operation := 0;
+  Counter := 0;
 end;
 
 { TCouchbaseConnection }
@@ -89,9 +119,11 @@ begin
   if FLastErrorCode = LCB_SUCCESS then begin
     FLastErrorDesc := 'Success';
     Result := True;
+    WriteLn(' IsSucces: ', Result, ' FLastErrorDesc: ', FLastErrorDesc);
   end else begin
-    FLastErrorDesc := String(lcb_strerror(nil, FLastErrorCode));
+    FLastErrorDesc := String(lcb_strerror(@FInstance, FLastErrorCode));
     Result := False;
+    WriteLn(' IsSucces: ', Result, ' FLastErrorDesc: ', FLastErrorDesc);
   end;
 end;
 
@@ -102,21 +134,32 @@ var
   Command: lcb_CMDSTORE;
 begin
   FillChar(Command, SizeOf(Command), 0);
+  Result.Initialize;
   Command.flags := lcb_U32(AFormat);
-  Command.cmdbase.exptime := 60;
-  //Command.cmdbase.cas :=
+  Command.cmdbase.exptime := 0;
+  Command.cmdbase.cas := Result.CAS;
   LCB_CMD_SET_KEY(Command.cmdbase, AKey, Length(AKey));
   LCB_CMD_SET_VALUE(Command, AValue, Length(AValue));
   Command.operation := lcb_storage_t(AOperation);
-  if IsSuccess(lcb_store3(FInstance, @Result, @Command)) then begin
-    WriteLn('Result: ', Result.Value, Result.Success);
-    lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
+  Write('- lcb_store3: ');
+  if IsSuccess(lcb_store3(FInstance, nil, @Command)) then begin
+    //lcb_wait3(@FInstance, LCB_WAIT_NOCHECK);
+    WriteLn('lcb_wait3 -> lcb_store3 success');
   end;
 end;
 
-constructor TCouchbaseConnection.Create;
+constructor TCouchbaseConnection.Create(const AConnection: String;
+  const AUsername: String; const APassword: String);
 begin
   FInstance:= nil;
+  FillChar(FOptions, SizeOf(FOptions), 0);
+  FOptions.version := 3;
+  FOptions.v3.connstr := PAnsiChar(AConnection);
+  FOptions.v3.username := PAnsiChar(AUsername);
+  FOptions.v3.passwd := PAnsiChar(APassword);
+  Write('- lcb_create: ');
+  if not IsSuccess(lcb_create(@FInstance, @FOptions)) then
+
 end;
 
 destructor TCouchbaseConnection.Destroy;
@@ -126,45 +169,45 @@ begin
   inherited Destroy;
 end;
 
-function TCouchbaseConnection.Connect(const AConnection: String;
-  const AUsername: String; const APassword: String): Boolean;
+function TCouchbaseConnection.Connect: Boolean;
 var
    lValue: String;
+  i: Integer;
+  res: TCouchbaseResult;
 begin
   result := false;
-  FillChar(FOptions, SizeOf(FOptions), 0);
-  FOptions.version := 3;
-  FOptions.v3.connstr := PAnsiChar(AConnection);
-  FOptions.v3.username := PAnsiChar(AUsername);
-  FOptions.v3.passwd := PAnsiChar(APassword);
+  Write('- lcb_connect: ');
+  if IsSuccess(lcb_connect(FInstance)) then begin
+    lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
+    Write('- lcb_get_bootstrap_status: ');
+    Result := IsSuccess(lcb_get_bootstrap_status(FInstance));
+    FConnected:= Result;
+    if Result then begin
+      lcb_install_callback3(FInstance, LCB_CALLBACK_GET, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_STORE, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_COUNTER, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_TOUCH, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_REMOVE, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_FLUSH, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_GET, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_SDLOOKUP, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_SDMUTATE, @CallbackProc);
 
-  if IsSuccess(lcb_create(@FInstance, @FOptions)) then
-    if IsSuccess(lcb_connect(FInstance)) then begin
-      lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
-      Result := IsSuccess(lcb_get_bootstrap_status(FInstance));
-      if Result then begin
-        lcb_install_callback3(FInstance, LCB_CALLBACK_GET, @CallbackProc);
-        lcb_install_callback3(FInstance, LCB_CALLBACK_STORE, @CallbackProc);
-        lcb_install_callback3(FInstance, LCB_CALLBACK_COUNTER, @CallbackProc);
-        lcb_install_callback3(FInstance, LCB_CALLBACK_TOUCH, @CallbackProc);
-        lcb_install_callback3(FInstance, LCB_CALLBACK_REMOVE, @CallbackProc);
-        lcb_install_callback3(FInstance, LCB_CALLBACK_FLUSH, @CallbackProc);
-        lcb_install_callback3(FInstance, LCB_CALLBACK_STATS, @CallbackProc);
-        lcb_install_callback3(FInstance, LCB_CALLBACK_SDLOOKUP, @CallbackProc);
-        lcb_install_callback3(FInstance, LCB_CALLBACK_SDMUTATE, @CallbackProc);
+      //for i:= 0 to 4 do begin
         // testing purpose
         //Store(coSET, 'key', '{"test":"valueTest4"}', rfJSON);
-        Upsert('keyupsert', '{"testUpsert":"valueUpsert"}');
-        Get('keyupsert', lValue);
-        WriteLn('value of keyupsert: ', lValue);
-      end;
+        //res := Upsert('keyupsert_'+IntToStr(i), '{"testUpsert":"valueUpsert"}');
+        //WriteLn('res.Value: ', res.Value);
+        //Get('keyupsert', lValue);
+        //WriteLn('value of keyupsert: ', lValue);
+      //end;
     end;
+  end;
 end;
 
 function TCouchbaseConnection.Upsert(const AKey: String; const AValue: String
   ): TCouchbaseResult;
 begin
-  WriteLn('Finstance: ', FInstance <> nil);
   Result := Store(coSET, AKey, AValue, rfJSON);
 end;
 
@@ -174,18 +217,25 @@ var
   Command: lcb_CMDGET;
 begin
   FillChar(Command, SizeOf(Command), 0);
-  WriteLn('1');
   LCB_CMD_SET_KEY(Command.cmdbase, AKey, Length(AKey));
-  WriteLn('2 ');
-  if IsSuccess(lcb_get3(FInstance, nil, @Command)) then
+  if IsSuccess(lcb_get3(FInstance, @Result, @Command)) then
   begin
-    WriteLn('3');
     lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
-    WriteLn('4');
     if Result.Success then
       AValue := Result.Value;
-    WriteLn('5');
   end;
+end;
+
+function TCouchbaseConnection.Add(const AKey: String; const AValue: String
+  ): TCouchbaseResult;
+begin
+  Result := Store(coADD, AKey, AValue, rfJSON);
+end;
+
+function TCouchbaseConnection.Append(const AKey: String; const AValue: String
+  ): TCouchbaseResult;
+begin
+  Result := Store(coAPPEND, AKey, AValue, rfJSON);
 end;
 
 end.
