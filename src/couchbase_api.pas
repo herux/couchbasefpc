@@ -271,7 +271,7 @@ var
   lcb_store3: Tlcb_store3_func;
   lcb_get3: Tlcb_get3_func;
 
-  CouchbaseHandle: TLibHandle = 0;
+  CouchbaseHandle: {$IFDEF DARWIN} TLibHandle {$ELSE} THandle {$ENDIF} = 0;
 
 procedure LCB_CMD_SET_KEY(var cmdbase: lcb_CMDBASE; AKey: String; Keylen: Integer);
 procedure LCB_CMD_SET_VALUE(var scmd: lcb_CMDSTORE; AValue: String; Valuelen: Integer);

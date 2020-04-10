@@ -24,7 +24,7 @@ type
   published
     procedure TestConnect;
     procedure TestUpsert;
-    procedure TestUpsert2;
+    //procedure TestUpsert2;
   end;
 
 implementation
@@ -40,10 +40,10 @@ begin
   cbCon.Upsert('TestUpsert', '{"TestUpsert":"TestUpsert"}');
 end;
 
-procedure TTestCouchbase.TestUpsert2;
-begin
-  cbCon.Upsert('TestUpsert2', '{"TestUpsert":"TestUpsert"}');
-end;
+//procedure TTestCouchbase.TestUpsert2;
+//begin
+  //cbCon.Upsert('TestUpsert2', '{"TestUpsert":"TestUpsert"}');
+//end;
 
 class destructor TTestCouchbase.Destroy;
 begin
