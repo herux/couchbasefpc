@@ -24,7 +24,7 @@ type
   published
     procedure TestConnect;
     procedure TestUpsert;
-    //procedure TestUpsert2;
+    procedure TestGet;
   end;
 
 implementation
@@ -40,10 +40,13 @@ begin
   cbCon.Upsert('TestUpsert', '{"TestUpsert":"TestUpsert"}');
 end;
 
-//procedure TTestCouchbase.TestUpsert2;
-//begin
-  //cbCon.Upsert('TestUpsert2', '{"TestUpsert":"TestUpsert"}');
-//end;
+procedure TTestCouchbase.TestGet;
+var
+  outVal: String;
+begin
+  if not cbCon.Get('TestUpsert', outVal) then
+     Fail('Error get function, for key ' + outVal);
+end;
 
 class destructor TTestCouchbase.Destroy;
 begin
