@@ -23,8 +23,32 @@ type
                          ctCBFLUSH = LCB_CALLBACK_CBFLUSH, ctOBSEQNO = LCB_CALLBACK_OBSEQNO, ctSTOREDUR = LCB_CALLBACK_STOREDUR,
                          ctSDLOOKUP = LCB_CALLBACK_SDLOOKUP, ctSDMUTATE = LCB_CALLBACK_SDMUTATE, ct_MAX = LCB_CALLBACK__MAX);
   ECouchbaseException = class(Exception)
-
   end;
+
+  { TCouchbaseResponse }
+
+  TCouchbaseResponse = record
+    Success: Boolean;
+    Error: Integer;
+    Key: String;
+    Value: TBytes;
+    Format: TCouchbaseResponseFormat;
+    Flags: Integer;
+    CAS: Integer;
+    Operation: Integer;
+    Counter: Integer;
+  public
+    procedure Init;
+  end;
+  PCouchbaseResponse = ^TCouchbaseResponse;
+
+  TCouchbaseInfo = record
+    Value: TBytes;
+    nValue: size_t;
+    status: Lcb_error_t
+  end;
+  PCouchbaseInfo = ^TCouchbaseInfo;
+
 
   { TCouchbaseConnection }
 
@@ -46,7 +70,7 @@ type
 
     function Connect: Boolean;
     function Upsert(const AKey: String; const AValue: String): boolean;
-    function Get(const AKey: String; out AValue: String): boolean;
+    function Get(const AKey: String; out AValue: TBytes): boolean;
     function Add(const AKey: String; const AValue: String): boolean;
     function Append(const AKey: String; const AValue: String): boolean;
   published
@@ -55,34 +79,64 @@ type
     property Connected: Boolean read FConnected;
   end;
 
-//procedure CallbackProc(instance: lcb_t; callbackType: Integer;
-//  const resp: plcb_RESPBASE); cdecl;
+procedure CallbackProc(instance: lcb_t; callbackType: Integer;
+  const resp: plcb_RESPBASE); cdecl;
 
 const
   SUCCESS = 'Success';
 
 implementation
 
-//procedure CallbackProc(instance: lcb_t; callbackType: Integer;
-//  const resp: plcb_RESPBASE); cdecl;
-//var
-//  vResp: lcb_RESPBASE;
-//  vCbRes: TCouchbaseResult;
-//  PCbRes: PCouchbaseResult;
-//begin
-//  vResp := resp^;
-//  PCbRes:= vResp.cookie;
-//  vCbRes:= PCbRes^;
-//  WriteLn('CallbackProc           | ');
-//  WriteLn('=======================|');
-//  WriteLn('callbackType: ', GetEnumName(typeInfo(TCouchbaseCallbackType), Ord(callbackType)));
-//  WriteLn('Version: ', vResp.version);
-//  WriteLn('Value: ', vCbRes.Value);
-//  WriteLn('Success: ', vCbRes.Success);
-//  WriteLn('Format: ', GetEnumName(typeInfo(TCouchbaseResponseFormat), Ord(vCbRes.Format)));
-//  WriteLn('-----------------------|');
-//  WriteLn('');
-//end;
+{ TCouchbaseResponse }
+
+procedure TCouchbaseResponse.Init;
+begin
+  Success := False;
+  Error := 0;
+  Key := '';
+  Value := nil;
+  Format := TCouchbaseResponseFormat.rfJSON;
+  Flags := 0;
+  CAS := 0;
+  Operation := 0;
+  Counter := 0;
+end;
+
+procedure CallbackProc(instance: lcb_t; callbackType: Integer;
+  const resp: plcb_RESPBASE); cdecl;
+var
+  vResp: lcb_RESPBASE;
+  vCbRes: TCouchbaseResponse;
+  PCbRes: PCouchbaseResponse;
+  PRespGet: plcb_RESPGET;
+  RespGet: lcb_RESPGET;
+  value: String;
+begin
+  vResp := resp^;
+  PCbRes:= vResp.cookie;
+  vCbRes:= PCbRes^;
+  vCbRes.Success:= vResp.rc = LCB_SUCCESS;
+  SetLength(vCbRes.Key, vResp.nkey);
+  Move(vResp.key^, vCbRes.Key[1], vResp.nkey);
+  vCbRes.Flags := vResp.rflags;
+  vCbRes.CAS := vResp.cas;
+  PRespGet := plcb_RESPGET(resp);
+  respGet := PRespGet^;
+  vCbRes.Format := TCouchbaseResponseFormat(respGet.itmflags shr 24);
+  SetLength(Value, respGet.nvalue);
+  Move(respGet.value^, value[1], respGet.nvalue);
+  WriteLn('CallbackProc           | ');
+  WriteLn('=======================|');
+  WriteLn('CbResult, ', PCbRes <> nil);
+  WriteLn('callbackType: ', GetEnumName(typeInfo(TCouchbaseCallbackType), Ord(callbackType)));
+  WriteLn('Key: ', vCbRes.Key);
+  WriteLn('Version: ', vResp.version);
+  WriteLn('Value: ', Value);
+  WriteLn('Success: ', vCbRes.Success);
+  WriteLn('Format: ', GetEnumName(typeInfo(TCouchbaseResponseFormat), Ord(vCbRes.Format)));
+  WriteLn('-----------------------|');
+  WriteLn('');
+end;
 
 { TCouchbaseConnection }
 
@@ -97,7 +151,6 @@ begin
     FLastErrorDesc := String(lcb_strerror(@FInstance, FLastErrorCode));
     Result := False;
   end;
-   WriteLn(' IsSucces?: ', Result, ' FLastErrorDesc: ', FLastErrorDesc);
 end;
 
 function TCouchbaseConnection.Store(const AOperation: TCouchbaseCRUDOperation;
@@ -140,7 +193,7 @@ end;
 
 function TCouchbaseConnection.Connect: Boolean;
 var
-   lValue: String;
+  lValue: String;
   i: Integer;
 begin
   result := false;
@@ -158,15 +211,6 @@ begin
       //lcb_install_callback3(FInstance, LCB_CALLBACK_GET, @CallbackProc);
       //lcb_install_callback3(FInstance, LCB_CALLBACK_SDLOOKUP, @CallbackProc);
       //lcb_install_callback3(FInstance, LCB_CALLBACK_SDMUTATE, @CallbackProc);
-
-      //for i:= 0 to 4 do begin
-         //testing purpose
-        //Store(coSET, 'key'+IntToStr(i), '{"test'+IntToStr(i)+'":"valueTest'+IntToStr(i)+'"}', rfJSON);
-        //res := Upsert('keyupsert_'+IntToStr(i), '{"testUpsert":"valueUpsert"}');
-        //WriteLn('res.Value: ', res.Value);
-        //Get('keyupsert', lValue);
-        //WriteLn('value of keyupsert: ', lValue);
-      //end;
     end;
   end;
 end;
@@ -177,19 +221,53 @@ begin
   Result := Store(coSET, AKey, AValue, rfJSON);
 end;
 
-function TCouchbaseConnection.Get(const AKey: String; out AValue: String
+function TCouchbaseConnection.Get(const AKey: String; out AValue: TBytes
   ): boolean;
 var
   Command: lcb_CMDGET;
-  res: TBytes;
-begin SetLength(res, 1000);
+  retVal: PCouchbaseInfo;
+  //res: TCouchbaseResponse;
+  //PRes: PCouchbaseResponse;
+  //PResBase: plcb_RESPBASE;
+  ////resBase: lcb_RESPBASE;
+  //ResGet: plcb_RESPGET;
+  value: String;
+begin
   Result := False;
+  //res.Init;
   FillChar(Command, SizeOf(Command), 0);
   LCB_CMD_SET_KEY(Command.cmdbase, AKey, Length(AKey));
-  if IsSuccess(lcb_get3(FInstance, @res, @Command)) then begin
+  if IsSuccess(lcb_get3(FInstance, @retVal, @Command)) then begin
     lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
-    AValue:= chr(res[0]);
-    WriteLn('res: ', AValue);
+    Result := IsSuccess(lcb_get_bootstrap_status(FInstance));
+
+    WriteLn('Success get: ', Result);
+    //WriteLn('Success: ', retVal^.status = LCB_SUCCESS);
+    //SetLength(value, retVal^.nValue);
+    //Move(retVal^.Value, value[1], retVal^.nValue);
+    //WriteLn('value: ', Value);
+
+    //PResBase := plcb_RESPBASE(@res);
+    //res.Success:= PResBase^.rc = LCB_SUCCESS;
+    //SetLength(res.Key, PResBase^.nkey);
+    //Move(PResBase^.key^, res.Key[1], PResBase^.nkey);
+    //res.Flags:= PResBase^.rflags;
+    //res.CAS:= PResBase^.cas;
+    //ResGet := plcb_RESPGET(PResBase);
+    //res.Format := TCouchbaseResponseFormat(ResGet^.itmflags shr 24);
+    //SetLength(value, ResGet^.nvalue);
+    //Move(ResGet^.value^, value[1], ResGet^.nvalue);
+
+    //WriteLn('res.Error: ', res.Error);
+    //WriteLn('res.Format: ', res.Format);
+    //WriteLn('res.Succes: ', res.Success);
+    //WriteLn('res.Key: ', res.Key);
+    //WriteLn('res.Value: ', Value);
+    //WriteLn('res.CAS: ', res.CAS);
+    //WriteLn('res.Counter: ', res.Counter);
+    //WriteLn('res.Flags: ', res.Flags);
+    //WriteLn('res.Key: ', res.Key);
+    //AValue:= res.Value;
     Result := True;
   end;
 end;

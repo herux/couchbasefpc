@@ -42,10 +42,15 @@ end;
 
 procedure TTestCouchbase.TestGet;
 var
-  outVal: String;
+  outVal: TBytes;
+  s: String;
 begin
   if not cbCon.Get('TestUpsert', outVal) then
-     Fail('Error get function, for key ' + outVal);
+     Fail('Error get function, for key ');
+  SetLength(s, High(outVal));
+  move(outVal[0], s[1], High(outVal));
+  WriteLn('a ', High(outVal));
+  WriteLn('test get: ', s);
 end;
 
 class destructor TTestCouchbase.Destroy;
