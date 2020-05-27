@@ -42,15 +42,11 @@ end;
 
 procedure TTestCouchbase.TestGet;
 var
-  outVal: TBytes;
+  outVal: String;
   s: String;
 begin
   if not Connection.Get('TestUpsert', outVal) then
      Fail('Error get function, for key ');
-  SetLength(s, High(outVal));
-  move(outVal[0], s[1], High(outVal));
-  WriteLn('a ', High(outVal));
-  WriteLn('test get: ', s);
 end;
 
 class destructor TTestCouchbase.Destroy;

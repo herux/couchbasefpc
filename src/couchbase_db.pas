@@ -32,7 +32,8 @@ type
     Success: Boolean;
     Error: Integer;
     Key: String;
-    Value: TBytes;
+    Value: String;
+    OValue: TBytes;
     Format: TCouchbaseResponseFormat;
     Flags: Integer;
     CAS: Integer;
@@ -58,22 +59,24 @@ type
     function Store(const AOperation: TCouchbaseCRUDOperation; const AKey: String; const AValue: String;
              const AFormat: TCouchbaseResponseFormat): boolean;
   protected
-    procedure CallbackHandler(instance: lcb_t; callbackType: Integer; const resp: plcb_RESPBASE);
+    procedure CallbackHandler(instance: lcb_t; callbackType: Integer;
+      const respBase: plcb_RESPBASE);
   public
     constructor Create(const AConnection: String; const AUsername: String = ''; const APassword: String = '');
     destructor Destroy; override;
 
     function Connect: Boolean;
     function Upsert(const AKey: String; const AValue: String): boolean;
-    function Get(const AKey: String; out AValue: TBytes): boolean;
+    function Get(const AKey: String; out AValue: String): boolean;
     function Add(const AKey: String; const AValue: String): boolean;
     function Append(const AKey: String; const AValue: String): boolean;
+
+    property LastResponse: TCouchbaseResponse read FLastResponse;
   published
     property LastErrorCode: Integer read FLastErrorCode;
     property LastErrorDesc: String read FLastErrorDesc;
     property Connected: Boolean read FConnected;
 
-    property LastResponse: TCouchbaseResponse read FLastResponse;
     property Value: String read FValue write FValue;
   end;
 
@@ -129,38 +132,34 @@ begin
 end;
 
 procedure TCouchbaseConnection.CallbackHandler(instance: lcb_t;
-  callbackType: Integer; const resp: plcb_RESPBASE);
+  callbackType: Integer; const respBase: plcb_RESPBASE);
 var
-  vResp: lcb_RESPBASE;
-  vCbRes: TCouchbaseResponse;
-  PCbRes: PCouchbaseResponse;
-  PRespGet: plcb_RESPGET;
-  RespGet: lcb_RESPGET;
-  val: String;
+  Presp: PCouchbaseResponse;
+  PrespGet: plcb_RESPGET;
+  respGet: lcb_RESPGET;
 begin
-  vResp := resp^;
-  PCbRes:= vResp.cookie;
-  vCbRes:= PCbRes^;
-  vCbRes.Success:= vResp.rc = LCB_SUCCESS;
-  SetLength(vCbRes.Key, vResp.nkey);
-  Move(vResp.key^, vCbRes.Key[1], vResp.nkey);
-  vCbRes.Flags := vResp.rflags;
-  vCbRes.CAS := vResp.cas;
-  PRespGet := plcb_RESPGET(resp);
+  Presp:= respBase^.cookie;
+  FLastResponse:= Presp^;
+  FLastResponse.Success:= respBase^.rc = LCB_SUCCESS;
+  SetLength(FLastResponse.Key, respBase^.nkey);
+  Move(respBase^.key^, FLastResponse.Key[1], respBase^.nkey);
+  FLastResponse.Flags := respBase^.rflags;
+  FLastResponse.CAS := respBase^.cas;
+  PrespGet := plcb_RESPGET(respBase);
   respGet := PRespGet^;
-  vCbRes.Format := TCouchbaseResponseFormat(respGet.itmflags shr 24);
-  SetLength(Val, respGet.nvalue);
-  Move(respGet.value^, val[1], respGet.nvalue);
+  FLastResponse.Format := TCouchbaseResponseFormat(respGet.itmflags);
+  SetLength(FLastResponse.Value, respGet.nvalue);
+  Move(respGet.value^, FLastResponse.Value[1], respGet.nvalue);
   WriteLn('CallbackProc           | ');
   WriteLn('=======================|');
-  WriteLn('CbResult, ', PCbRes <> nil);
+  WriteLn('CbResult, ', Presp <> nil);
   WriteLn('callbackType: ', GetEnumName(typeInfo(TCouchbaseCallbackType), Ord(callbackType)));
-  WriteLn('Key: ', vCbRes.Key);
-  WriteLn('Version: ', vResp.version);
-  WriteLn('Value: ', Val);
-  //Connection.Value := value;
-  WriteLn('Success: ', vCbRes.Success);
-  WriteLn('Format: ', GetEnumName(typeInfo(TCouchbaseResponseFormat), Ord(vCbRes.Format)));
+  WriteLn('Key: ', FLastResponse.Key);
+  WriteLn('Version: ', respBase^.version);
+  WriteLn('Value: ', FLastResponse.Value);
+  WriteLn('Success: ', FLastResponse.Success);
+  WriteLn('Format: ', GetEnumName(typeInfo(TCouchbaseResponseFormat), Ord(FLastResponse.Format)));
+  WriteLn('Counter: ', FLastResponse.Counter);
   WriteLn('-----------------------|');
   WriteLn('');
 end;
@@ -169,7 +168,6 @@ constructor TCouchbaseConnection.Create(const AConnection: String;
   const AUsername: String; const APassword: String);
 begin
   FInstance:= nil;
-  //FCouchbaseCallbackProc:= @CallbackProc;
   FillChar(FOptions, SizeOf(FOptions), 0);
   FOptions.version := 3;
   FOptions.v3.connstr := PAnsiChar(AConnection);
@@ -215,7 +213,7 @@ begin
   Result := Store(coSET, AKey, AValue, rfJSON);
 end;
 
-function TCouchbaseConnection.Get(const AKey: String; out AValue: TBytes
+function TCouchbaseConnection.Get(const AKey: String; out AValue: String
   ): boolean;
 var
   Command: lcb_CMDGET;
@@ -227,42 +225,16 @@ var
   //value: String;
 begin
   Result := False;
-  //res.Init;
   FillChar(Command, SizeOf(Command), 0);
   LCB_CMD_SET_KEY(Command.cmdbase, AKey, Length(AKey));
   if IsSuccess(lcb_get3(FInstance, @resp, @Command)) then begin
     lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
     Result := IsSuccess(lcb_get_bootstrap_status(FInstance));
 
-    WriteLn('Success get: ', resp.Key);
-    WriteLn('Success callback: ', value);
-    //WriteLn('Success: ', retVal^.status = LCB_SUCCESS);
-    //SetLength(value, retVal^.nValue);
-    //Move(retVal^.Value, value[1], retVal^.nValue);
-    //WriteLn('value: ', Value);
-
-    //PResBase := plcb_RESPBASE(@res);
-    //res.Success:= PResBase^.rc = LCB_SUCCESS;
-    //SetLength(res.Key, PResBase^.nkey);
-    //Move(PResBase^.key^, res.Key[1], PResBase^.nkey);
-    //res.Flags:= PResBase^.rflags;
-    //res.CAS:= PResBase^.cas;
-    //ResGet := plcb_RESPGET(PResBase);
-    //res.Format := TCouchbaseResponseFormat(ResGet^.itmflags shr 24);
-    //SetLength(value, ResGet^.nvalue);
-    //Move(ResGet^.value^, value[1], ResGet^.nvalue);
-
-    //WriteLn('res.Error: ', res.Error);
-    //WriteLn('res.Format: ', res.Format);
-    //WriteLn('res.Succes: ', res.Success);
-    //WriteLn('res.Key: ', res.Key);
-    //WriteLn('res.Value: ', Value);
-    //WriteLn('res.CAS: ', res.CAS);
-    //WriteLn('res.Counter: ', res.Counter);
-    //WriteLn('res.Flags: ', res.Flags);
-    //WriteLn('res.Key: ', res.Key);
-    //AValue:= res.Value;
-    Result := True;
+    WriteLn('Success get: ', resp.Success);
+    WriteLn('Success callback: ', LastResponse.Key);
+    AValue := FLastResponse.Value;
+    Result := resp.Success;
   end;
 end;
 
