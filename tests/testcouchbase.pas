@@ -13,7 +13,7 @@ type
 
   TTestCouchbase= class(TTestCase)
   strict private
-    class var cbCon: TCouchbaseConnection;
+    //class var cbCon: TCouchbaseConnection;
     class var FExampleJson: String;
     class destructor Destroy;
   public
@@ -31,13 +31,13 @@ implementation
 
 procedure TTestCouchbase.TestConnect;
 begin
-  if not cbCon.Connect then
-       Fail('Connection to couchbase failed, error: ' + cbCon.LastErrorDesc);
+  if not Connection.Connect then
+       Fail('Connection to couchbase failed, error: ' + Connection.LastErrorDesc);
 end;
 
 procedure TTestCouchbase.TestUpsert;
 begin
-  cbCon.Upsert('TestUpsert', '{"TestUpsert":"TestUpsert"}');
+  Connection.Upsert('TestUpsert', '{"TestUpsert":"TestUpsert"}');
 end;
 
 procedure TTestCouchbase.TestGet;
@@ -45,7 +45,7 @@ var
   outVal: TBytes;
   s: String;
 begin
-  if not cbCon.Get('TestUpsert', outVal) then
+  if not Connection.Get('TestUpsert', outVal) then
      Fail('Error get function, for key ');
   SetLength(s, High(outVal));
   move(outVal[0], s[1], High(outVal));
@@ -55,12 +55,12 @@ end;
 
 class destructor TTestCouchbase.Destroy;
 begin
-  cbCon.Free;
+  Connection.Free;
 end;
 
 class constructor TTestCouchbase.Create;
 begin
-  cbCon := TCouchbaseConnection.Create('couchbase://localhost/testbucket', 'usercb', 'sa_karep_mu');
+  Connection := TCouchbaseConnection.Create('couchbase://localhost/testbucket', 'usercb', 'sa_karep_mu');
 end;
 
 procedure TTestCouchbase.SetUp;
