@@ -13,7 +13,6 @@ type
 
   TTestCouchbase= class(TTestCase)
   strict private
-    //class var cbCon: TCouchbaseConnection;
     class var FExampleJson: String;
     class destructor Destroy;
   public
@@ -25,6 +24,11 @@ type
     procedure TestConnect;
     procedure TestUpsert;
     procedure TestGet;
+    procedure TestAdd;
+    //procedure TestAppend;
+    //procedure TestPrepend;
+    //procedure TestReplace;
+    //procedure TestRemove;
   end;
 
 implementation
@@ -48,6 +52,35 @@ begin
   if not Connection.Get('TestUpsert', outVal) then
      Fail('Error get function, for key ');
 end;
+
+procedure TTestCouchbase.TestAdd;
+begin
+  if not Connection.Add('TestAdd', '{"TestAdd":"TestAdd"}') then
+     Fail('Error add function, for key ');
+end;
+
+//procedure TTestCouchbase.TestAppend;
+//begin
+//  if not Connection.Append('TestAppend', '{"TestAppend":"TestAppend"}') then
+//     Fail('Error append function, for key ');
+//end;
+
+//procedure TTestCouchbase.TestPrepend;
+//begin
+//  if not Connection.Prepend('TestPrepend', '{"TestPrepend":"TestPrepend"}') then
+//     Fail('Error prepend function, for key ');
+//end;
+//
+//procedure TTestCouchbase.TestReplace;
+//begin
+//  if not Connection.Remove('TestPrepend') then
+//     Fail('Error remove function, for key ');
+//end;
+//
+//procedure TTestCouchbase.TestRemove;
+//begin
+//
+//end;
 
 class destructor TTestCouchbase.Destroy;
 begin
