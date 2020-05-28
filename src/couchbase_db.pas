@@ -42,6 +42,14 @@ type
   end;
   PCouchbaseResponse = ^TCouchbaseResponse;
 
+  TCouchbaseInfo = record
+    OValue: TBytes;
+    Value: String;
+    nValue: size_t;
+    status: Lcb_error_t;
+  end;
+  PCouchbaseInfo = ^TCouchbaseInfo;
+
 
   { TCouchbaseConnection }
 
@@ -111,6 +119,7 @@ begin
     FLastErrorDesc := String(lcb_strerror(@FInstance, FLastErrorCode));
     Result := False;
   end;
+  WriteLn('lastErrorCode: ', FLastErrorCode, ' lastErrorDesc: ', FLastErrorDesc);
 end;
 
 function TCouchbaseConnection.Store(const AOperation: TCouchbaseCRUDOperation;
@@ -118,6 +127,7 @@ function TCouchbaseConnection.Store(const AOperation: TCouchbaseCRUDOperation;
   const AFormat: TCouchbaseResponseFormat): boolean;
 var
   Command: lcb_CMDSTORE;
+  infoResult: TCouchbaseInfo;
 begin
   FillChar(Command, SizeOf(Command), 0);
   Command.flags := lcb_U32(AFormat);
@@ -126,8 +136,9 @@ begin
   LCB_CMD_SET_KEY(Command.cmdbase, AKey, Length(AKey));
   LCB_CMD_SET_VALUE(Command, AValue, Length(AValue));
   Command.operation := lcb_storage_t(AOperation);
-  if IsSuccess(lcb_store3(FInstance, nil, @Command)) then begin
+  if IsSuccess(lcb_store3(FInstance, @infoResult, @Command)) then begin
     lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
+    WriteLn('infoResult: ', infoResult.status);
   end;
 end;
 
@@ -197,12 +208,12 @@ begin
     if Result then begin
       lcb_install_callback3(FInstance, LCB_CALLBACK_GET, @CallbackProc);
       //lcb_install_callback3(FInstance, LCB_CALLBACK_STORE, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_COUNTER, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_TOUCH, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_REMOVE, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_FLUSH, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_SDLOOKUP, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_SDMUTATE, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_COUNTER, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_TOUCH, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_REMOVE, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_FLUSH, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_SDLOOKUP, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_SDMUTATE, @CallbackProc);
     end;
   end;
 end;
@@ -218,11 +229,6 @@ function TCouchbaseConnection.Get(const AKey: String; out AValue: String
 var
   Command: lcb_CMDGET;
   resp: TCouchbaseResponse;
-  //PRes: PCouchbaseResponse;
-  //PResBase: plcb_RESPBASE;
-  ////resBase: lcb_RESPBASE;
-  //ResGet: plcb_RESPGET;
-  //value: String;
 begin
   Result := False;
   FillChar(Command, SizeOf(Command), 0);
@@ -231,10 +237,10 @@ begin
     lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
     Result := IsSuccess(lcb_get_bootstrap_status(FInstance));
 
-    WriteLn('Success get: ', resp.Success);
-    WriteLn('Success callback: ', LastResponse.Key);
     AValue := FLastResponse.Value;
     Result := resp.Success;
+    WriteLn('Success get: ', resp.Success);
+    WriteLn('Success callback: ', LastResponse.Key);
   end;
 end;
 
