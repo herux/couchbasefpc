@@ -56,7 +56,7 @@ end;
 procedure TTestCouchbase.TestAdd;
 begin
   if not Connection.Add('TestAdd', '{"TestAdd":"TestAdd"}') then
-     Fail('Error add function, for key ');
+     Fail('Error add function, ' +  Connection.LastErrorDesc);
 end;
 
 //procedure TTestCouchbase.TestAppend;
