@@ -61,7 +61,6 @@ type
     FInstance: lcb_t;
     FLastResponse: TCouchbaseResponse;
     FOptions: lcb_create_st;
-    //FCouchbaseCallbackProc: TCouchbaseCallbackProc;
     FValue: String;
     function IsSuccess(const ACallFuncResult: Lcb_error_t): Boolean;
     function Store(const AOperation: TCouchbaseCRUDOperation; const AKey: String; const AValue: String;
@@ -119,7 +118,7 @@ begin
     FLastErrorDesc := String(lcb_strerror(@FInstance, FLastErrorCode));
     Result := False;
   end;
-  WriteLn('lastErrorCode: ', FLastErrorCode, ' lastErrorDesc: ', FLastErrorDesc);
+  //WriteLn('lastErrorCode: ', FLastErrorCode, ' lastErrorDesc: ', FLastErrorDesc);
 end;
 
 function TCouchbaseConnection.Store(const AOperation: TCouchbaseCRUDOperation;
@@ -129,6 +128,7 @@ var
   Command: lcb_CMDSTORE;
   infoResult: TCouchbaseInfo;
 begin
+  Result := False;
   FillChar(Command, SizeOf(Command), 0);
   Command.flags := lcb_U32(AFormat);
   Command.cmdbase.exptime := 0;
@@ -138,7 +138,8 @@ begin
   Command.operation := lcb_storage_t(AOperation);
   if IsSuccess(lcb_store3(FInstance, @infoResult, @Command)) then begin
     lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
-    WriteLn('infoResult: ', infoResult.status);
+    WriteLn('infoResult: ', GetEnumName(TypeInfo(TCouchbaseCRUDOperation), Ord(AOperation)),' - ',infoResult.status);
+    Result := True;
   end;
 end;
 
@@ -147,32 +148,54 @@ procedure TCouchbaseConnection.CallbackHandler(instance: lcb_t;
 var
   Presp: PCouchbaseResponse;
   PrespGet: plcb_RESPGET;
-  respGet: lcb_RESPGET;
+  PrespStore: plcb_RESPSTORE;
+  PrespCounter: plcb_RESPCOUNTER;
 begin
   Presp:= respBase^.cookie;
   FLastResponse:= Presp^;
   FLastResponse.Success:= respBase^.rc = LCB_SUCCESS;
+
   SetLength(FLastResponse.Key, respBase^.nkey);
   Move(respBase^.key^, FLastResponse.Key[1], respBase^.nkey);
   FLastResponse.Flags := respBase^.rflags;
   FLastResponse.CAS := respBase^.cas;
-  PrespGet := plcb_RESPGET(respBase);
-  respGet := PRespGet^;
-  FLastResponse.Format := TCouchbaseResponseFormat(respGet.itmflags);
-  SetLength(FLastResponse.Value, respGet.nvalue);
-  Move(respGet.value^, FLastResponse.Value[1], respGet.nvalue);
-  WriteLn('CallbackProc           | ');
-  WriteLn('=======================|');
-  WriteLn('CbResult, ', Presp <> nil);
-  WriteLn('callbackType: ', GetEnumName(typeInfo(TCouchbaseCallbackType), Ord(callbackType)));
-  WriteLn('Key: ', FLastResponse.Key);
-  WriteLn('Version: ', respBase^.version);
-  WriteLn('Value: ', FLastResponse.Value);
-  WriteLn('Success: ', FLastResponse.Success);
-  WriteLn('Format: ', GetEnumName(typeInfo(TCouchbaseResponseFormat), Ord(FLastResponse.Format)));
-  WriteLn('Counter: ', FLastResponse.Counter);
-  WriteLn('-----------------------|');
-  WriteLn('');
+  if FLastResponse.Success then begin
+    //WriteLn('TCouchbaseCallbackType(callbackType): ', TCouchbaseCallbackType(callbackType));
+    case TCouchbaseCallbackType(callbackType) of
+      ctGET: begin
+          PrespGet := plcb_RESPGET(respBase);
+          FLastResponse.Format := TCouchbaseResponseFormat(PrespGet^.itmflags);
+          SetLength(FLastResponse.Value, PrespGet^.nvalue);
+          Move(PrespGet^.value^, FLastResponse.Value[1], PrespGet^.nvalue);
+          WriteLn('callback type: ctGET');
+      end;
+      ctSTORE: begin
+          PrespStore := plcb_RESPSTORE(respBase);
+          FLastResponse.Operation := PrespStore^.op;
+          WriteLn('callback type: ctSTORE');
+      end;
+      ctCOUNTER: begin
+          PrespCounter := plcb_RESPCOUNTER(respBase);
+          FLastResponse.Counter := PrespCounter^.value;
+          WriteLn('callback type: ctCOUNTER');
+      end;
+    end;
+  end;
+
+
+
+  //WriteLn('CallbackProc           | ');
+  //WriteLn('=======================|');
+  //WriteLn('CbResult, ', Presp <> nil);
+  //WriteLn('callbackType: ', GetEnumName(typeInfo(TCouchbaseCallbackType), Ord(callbackType)));
+  //WriteLn('Key: ', FLastResponse.Key);
+  //WriteLn('Version: ', respBase^.version);
+  //WriteLn('Value: ', FLastResponse.Value);
+  //WriteLn('Success: ', FLastResponse.Success);
+  //WriteLn('Format: ', GetEnumName(typeInfo(TCouchbaseResponseFormat), Ord(FLastResponse.Format)));
+  //WriteLn('Counter: ', FLastResponse.Counter);
+  //WriteLn('-----------------------|');
+  //WriteLn('');
 end;
 
 constructor TCouchbaseConnection.Create(const AConnection: String;
@@ -206,14 +229,14 @@ begin
     Result := IsSuccess(lcb_get_bootstrap_status(FInstance));
     FConnected:= Result;
     if Result then begin
-      lcb_install_callback3(FInstance, LCB_CALLBACK_GET, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_STORE, @CallbackProc);
-      lcb_install_callback3(FInstance, LCB_CALLBACK_COUNTER, @CallbackProc);
-      lcb_install_callback3(FInstance, LCB_CALLBACK_TOUCH, @CallbackProc);
-      lcb_install_callback3(FInstance, LCB_CALLBACK_REMOVE, @CallbackProc);
-      lcb_install_callback3(FInstance, LCB_CALLBACK_FLUSH, @CallbackProc);
-      lcb_install_callback3(FInstance, LCB_CALLBACK_SDLOOKUP, @CallbackProc);
-      lcb_install_callback3(FInstance, LCB_CALLBACK_SDMUTATE, @CallbackProc);
+      //lcb_install_callback3(FInstance, LCB_CALLBACK_GET, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_STORE, @CallbackProc);
+      //lcb_install_callback3(FInstance, LCB_CALLBACK_COUNTER, @CallbackProc);
+      //lcb_install_callback3(FInstance, LCB_CALLBACK_TOUCH, @CallbackProc);
+      //lcb_install_callback3(FInstance, LCB_CALLBACK_REMOVE, @CallbackProc);
+      //lcb_install_callback3(FInstance, LCB_CALLBACK_FLUSH, @CallbackProc);
+      //lcb_install_callback3(FInstance, LCB_CALLBACK_SDLOOKUP, @CallbackProc);
+      //lcb_install_callback3(FInstance, LCB_CALLBACK_SDMUTATE, @CallbackProc);
     end;
   end;
 end;
@@ -240,7 +263,8 @@ begin
     AValue := FLastResponse.Value;
     Result := resp.Success;
     WriteLn('Success get: ', resp.Success);
-    WriteLn('Success callback: ', LastResponse.Key);
+    WriteLn('Success callback key: ', LastResponse.Key);
+    WriteLn('Success callback value: ', LastResponse.Value);
   end;
 end;
 

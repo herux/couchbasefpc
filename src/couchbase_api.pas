@@ -197,6 +197,11 @@ type
   end;
   plcb_CMDGET = ^lcb_CMDGET;
 
+  lcb_CMDREMOVE = record
+    cmdbase: lcb_CMDBASE;
+  end;
+  plcb_CMDREMOVE = ^lcb_CMDREMOVE;
+
   lcb_RESPSTORE = record
     respbase: lcb_RESPBASE;
     op: lcb_storage_t;
@@ -255,6 +260,7 @@ type
   // crud
   Tlcb_store3_func = function(instance: lcb_t; const cookie: Pointer; const cmd: plcb_CMDSTORE): Lcb_error_t; cdecl;
   Tlcb_get3_func = function(instance: lcb_t; const cookie: Pointer; const cmd: plcb_CMDGET): Lcb_error_t; cdecl;
+  Tlcb_remove3_func = function(instance: lcb_t; const cookie: Pointer; const cmd: plcb_CMDREMOVE): Lcb_error_t; cdecl;
 
 
 
@@ -270,6 +276,7 @@ var
   lcb_set_get_callback: Tlcb_set_get_callback_proc;
   lcb_store3: Tlcb_store3_func;
   lcb_get3: Tlcb_get3_func;
+  lcb_remove3: Tlcb_remove3_func;
 
   CouchbaseHandle: {$IFDEF DARWIN} TLibHandle {$ELSE} THandle {$ENDIF} = 0;
 
@@ -321,6 +328,7 @@ begin
   // crud
   lcb_store3 := Tlcb_store3_func(LoadCouchbaseFunc('lcb_store3'));
   lcb_get3 := Tlcb_get3_func(LoadCouchbaseFunc('lcb_get3'));
+  lcb_remove3 := Tlcb_remove3_func(LoadCouchbaseFunc('lcb_remove3'));
   // error function
   lcb_strerror :=  Tlcb_strerror_func(LoadCouchbaseFunc('lcb_strerror'));
 end;

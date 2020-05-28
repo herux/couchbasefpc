@@ -24,7 +24,7 @@ type
     procedure TestConnect;
     procedure TestUpsert;
     procedure TestGet;
-    procedure TestAdd;
+    //procedure TestAdd;
     //procedure TestAppend;
     //procedure TestPrepend;
     //procedure TestReplace;
@@ -41,23 +41,23 @@ end;
 
 procedure TTestCouchbase.TestUpsert;
 begin
-  Connection.Upsert('TestUpsert', '{"TestUpsert":"TestUpsert"}');
+  if not Connection.Upsert('TestUpsert', '{"TestUpsert":"TestUpsert"}') then
+       Fail('Upsert function error: ' + Connection.LastErrorDesc);
 end;
 
 procedure TTestCouchbase.TestGet;
 var
   outVal: String;
-  s: String;
 begin
   if not Connection.Get('TestUpsert', outVal) then
-     Fail('Error get function, for key ');
+     Fail('Error get function: '+ Connection.LastErrorDesc);
 end;
 
-procedure TTestCouchbase.TestAdd;
-begin
-  if not Connection.Add('TestAdd', '{"TestAdd":"TestAdd"}') then
-     Fail('Error add function, ' +  Connection.LastErrorDesc);
-end;
+//procedure TTestCouchbase.TestAdd;
+//begin
+//  if not Connection.Add('TestAdd', '{"TestAdd":"TestAdd"}') then
+//     Fail('Error add function, ' +  Connection.LastErrorDesc);
+//end;
 
 //procedure TTestCouchbase.TestAppend;
 //begin
