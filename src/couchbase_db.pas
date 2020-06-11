@@ -77,6 +77,8 @@ type
     function Get(const AKey: String; out AValue: String): boolean;
     function Add(const AKey: String; const AValue: String): boolean;
     function Append(const AKey: String; const AValue: String): boolean;
+    function Prepend(const AKey: String; const AValue: String): boolean;
+    function Remove(const AKey: String): Boolean;
 
     property LastResponse: TCouchbaseResponse read FLastResponse;
   published
@@ -229,14 +231,14 @@ begin
     Result := IsSuccess(lcb_get_bootstrap_status(FInstance));
     FConnected:= Result;
     if Result then begin
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_GET, @CallbackProc);
-      lcb_install_callback3(FInstance, LCB_CALLBACK_STORE, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_COUNTER, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_TOUCH, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_REMOVE, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_FLUSH, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_SDLOOKUP, @CallbackProc);
-      //lcb_install_callback3(FInstance, LCB_CALLBACK_SDMUTATE, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_GET, @CallbackProc);
+      //lcb_install_callback3(FInstance, LCB_CALLBACK_STORE, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_COUNTER, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_TOUCH, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_REMOVE, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_FLUSH, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_SDLOOKUP, @CallbackProc);
+      lcb_install_callback3(FInstance, LCB_CALLBACK_SDMUTATE, @CallbackProc);
     end;
   end;
 end;
@@ -278,6 +280,26 @@ function TCouchbaseConnection.Append(const AKey: String; const AValue: String
   ): boolean;
 begin
   Result := Store(coAPPEND, AKey, AValue, rfJSON);
+end;
+
+function TCouchbaseConnection.Prepend(const AKey: String; const AValue: String
+  ): boolean;
+begin
+  Result := Store(coPREPEND, AKey, AValue, rfJSON);
+end;
+
+function TCouchbaseConnection.Remove(const AKey: String): Boolean;
+var
+  Command: lcb_CMDREMOVE;
+  resp: TCouchbaseInfo;
+begin
+  Result := False;
+  FillChar(Command, SizeOf(Command), 0);
+  LCB_CMD_SET_KEY(Command.cmdbase, AKey, Length(AKey));
+  if IsSuccess(lcb_remove3(FInstance, @resp, @Command)) then begin
+    lcb_wait3(FInstance, LCB_WAIT_NOCHECK);
+    Result := resp.status = LCB_SUCCESS;
+  end;
 end;
 
 end.

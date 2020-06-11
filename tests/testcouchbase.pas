@@ -24,7 +24,7 @@ type
     procedure TestConnect;
     procedure TestUpsert;
     procedure TestGet;
-    //procedure TestAdd;
+    procedure TestAdd;
     //procedure TestAppend;
     //procedure TestPrepend;
     //procedure TestReplace;
@@ -53,22 +53,22 @@ begin
      Fail('Error get function: '+ Connection.LastErrorDesc);
 end;
 
-//procedure TTestCouchbase.TestAdd;
-//begin
-//  if not Connection.Add('TestAdd', '{"TestAdd":"TestAdd"}') then
-//     Fail('Error add function, ' +  Connection.LastErrorDesc);
-//end;
+procedure TTestCouchbase.TestAdd;
+begin
+  if not Connection.Add('TestAdd', '{"TestAdd":"TestAdd"}') then
+     Fail('Error add function, ' +  Connection.LastErrorDesc);
+end;
 
 //procedure TTestCouchbase.TestAppend;
 //begin
 //  if not Connection.Append('TestAppend', '{"TestAppend":"TestAppend"}') then
-//     Fail('Error append function, for key ');
+//     Fail('Error append function '+ Connection.LastErrorDesc);
 //end;
 
 //procedure TTestCouchbase.TestPrepend;
 //begin
 //  if not Connection.Prepend('TestPrepend', '{"TestPrepend":"TestPrepend"}') then
-//     Fail('Error prepend function, for key ');
+//     Fail('Error prepend function, '+ Connection.LastErrorDesc);
 //end;
 //
 //procedure TTestCouchbase.TestReplace;
@@ -79,7 +79,8 @@ end;
 //
 //procedure TTestCouchbase.TestRemove;
 //begin
-//
+//  if not Connection.Remove('TestUpsert') then
+//     Fail('Error prepend function, '+ Connection.LastErrorDesc);
 //end;
 
 class destructor TTestCouchbase.Destroy;
